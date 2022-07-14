@@ -1,0 +1,100 @@
+<!DOCTYPE HTML><html>
+<!-- Sonia Gomez 
+    TFM Master Ingenieria Electronica -->
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <style>
+    body {
+      min-width: 310px;
+    	max-width: 800px;
+    	height: 400px;
+      margin: 0 auto
+    }
+    h2 {
+      font-family: Arial;
+      font-size: 2.5rem;
+      text-align: center;
+    }
+    h3 {
+      font-family: Arial;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>ESP32 Robot Web Server</h2>
+  <p style="text-align:center;"> TFM Sonia Gomez Gijon </p>
+  <h3> Esta web muestra la informacion leida por el modulo lector. </h3>
+  <p style="text-align:center;"> En la siguiente grafica se muestra un barrido de frecuencias cuyo valor maximo 
+    de amplitud representa la frecuencia de resonancia de la etiqueta detectada.</p>
+  <div id="chart-RFID_reader" class="container"></div>
+
+</body>
+<script>
+var chartT = new Highcharts.Chart({
+  chart:{ renderTo : 'chart-RFID_reader' },
+  title: { text: 'Frecuencia de resonancia de la etiqueta' },
+  series: [{
+    showInLegend: false,
+    data: []
+  }],
+  // Formato de la grafica
+  plotOptions: {
+    line: { animation: false,
+      dataLabels: { enabled: true }
+    },
+    //series: { color: '#059e8a' }
+    series: { color: '#3498DB' }
+  },
+  // Formarto del eje X
+  xAxis: { 
+    title: { text: 'Frecuencia (KHz)' },
+    min: 11000,
+    max: 15000
+  },
+  // Formarto del eje Y
+  yAxis: {
+    title: { text: 'Amplitud (0-1023)' },
+    min: 0,
+    max: 1030
+  },
+  credits: { enabled: false }
+});
+setInterval(function ( ) {
+  var vread="";
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var i=0;
+      var xy=0;
+      var x=0,y=0;
+      chartT.series[0].setData([]);
+      while(i<this.responseText.length){
+        if (this.responseText[i]!=','){
+          vread=vread+this.responseText[i];
+        } else {
+          if (xy==0) {
+            x = (parseInt(vread) * 4096) / 1000;
+          } else {
+            y = parseInt(vread);
+          }
+          xy++;
+          if (xy==2) {
+            chartT.series[0].addPoint([x, y], false);
+            xy=0;
+          }
+          vread="";
+        }
+        i++;
+      }
+      chartT.redraw();
+    }
+  };
+  xhttp.open("GET", "/data", true);
+  xhttp.send();
+}, 2000 ) ;
+
+</script>
+</html>
